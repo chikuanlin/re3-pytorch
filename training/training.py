@@ -97,6 +97,8 @@ def main(args):
 
         print('[Epoch %d / %d] train_loss: %.5f val_loss: %.5f video id: %d' % (epoch, max_steps, train_loss, val_loss, dataset_train.video_idx))
         torch.save(net.state_dict(), DESTINATION)
+        start_line[0] = dataset_train.cur_line
+        start_line[1] = dataset_val.cur_line
         np.save('start_line.npy', start_line)
 
 
