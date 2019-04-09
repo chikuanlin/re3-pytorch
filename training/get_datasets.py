@@ -10,7 +10,10 @@ def get_data_for_dataset(dataset_name, mode):
                 # 'datasets',
                 # 'imagenet_video')
         datadir = ''
-        labeldir = '/home/yueshen/eecs442/proj/final_project'
+        # labeldir = '/home/yueshen/eecs442/proj/final_project'
+        # google cloud path
+        labeldir = '/home/re3-pytorch/dataset'
+
         gt = np.load(labeldir + '/labels/' + mode + '/labels.npy')
         image_paths = [datadir + line.strip()
             for line in open(labeldir + '/labels/' + mode + '/image_names.txt')]

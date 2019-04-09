@@ -134,7 +134,7 @@ class Dataset(object):
 			tImage[dd, 0, ...], outputBox = im_util.get_cropped_input(images[max(dd-1, 0)], bboxPrev, CROP_PAD, CROP_SIZE)
 			tImage[dd,1,...] = im_util.get_cropped_input(images[dd], noisyBox, CROP_PAD, CROP_SIZE)[0]
 
-			shiftedBBox = bb_util.to_crop_coordinate_system(bboxOn, outputBox, 1, 227)  # why CROP_PAD
+			shiftedBBox = bb_util.to_crop_coordinate_system(bboxOn, outputBox, CROP_PAD, 1)  # why CROP_PAD
 			# print('shiftedBBox = ', shiftedBBox)
 			shiftedBBoxXYWH = bb_util.xyxy_to_xywh(shiftedBBox)
 			xywhLabels[dd,:] = shiftedBBoxXYWH
@@ -145,7 +145,7 @@ class Dataset(object):
 		tImage = tImage.reshape([self.delta * 2] + list(tImage.shape[2:]))
 		xyxyLabels = bb_util.xywh_to_xyxy(xywhLabels.T).T * 10
 		xyxyLabels = xyxyLabels.astype(np.float32)
-		tImage = tImage.transpose(0,3,1,2)
+		tImage = tImage.transpose(0,3,1,2) 
 		return tImage, xyxyLabels
 
 
@@ -167,18 +167,20 @@ if __name__ == '__main__':
 
 		if DEBUG:
 			if num_seq == 0:
-				old = xyxyLabels
+				old = tImage
 			else:
-				# print(np.sum(old - xyxyLabels))
-				old = xyxyLabels
+				print(np.sum(old - tImage))
+				old = tImage
 
 			print('video id = ', dataset.video_idx)
-			print('t_image shape = ', tImage.shape, 'xyxyLabels shape = ', xyxyLabels.shape)
-		else:
-			Images[num_seq, ...] = tImage.copy()
-			Labels[num_seq, ...] = xyxyLabels.copy()
+			print('t_image shape = ', tImage.shape, np.sum(tImage))
+			# print('xyxyLabels shape = ', xyxyLabels[0,:])
+			
+		Images[num_seq, ...] = tImage.copy()
+		Labels[num_seq, ...] = xyxyLabels.copy()
 		num_seq += 1
 		print('current seq # = ', num_seq)
+
 
 	np.save('Images.npy', Images)
 	np.save('Labels.npy', Labels)
@@ -190,4 +192,5 @@ if __name__ == '__main__':
 	Images_load = np.load('Images.npy')
 	Labels_load = np.load('Labels.npy')
 	print(Images_load.shape, Labels_load.shape)
-
+	print('images load = ', np.sum(Images_load))
+	print('label load = ', Labels_load[0,0:5,:])
