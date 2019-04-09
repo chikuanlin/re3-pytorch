@@ -65,8 +65,8 @@ def main(args):
         net.eval()
     criterion = nn.L1Loss()
     optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate, weight_decay=5e-4)
-    dataset = get_sequence.Dataset(32)
-
+    dataset_train = get_sequence.Dataset(32)
+    dataset_val = get_sequence.Dataset(32, 'val')
 
     print('Start Training: ')
     for epoch in range(1, max_steps+1):
@@ -81,12 +81,12 @@ def main(args):
         train_loader = []
         val_loader = []
         for _ in range(num_sequence):
-            X, y = dataset.get_data_sequence()
+            X, y = dataset_train.get_data_sequence()
             X = torch.tensor(X, dtype = torch.float)
             y = torch.tensor(y, dtype = torch.float)
             train_loader.append((X, y))
         for _ in range(num_sequence//10):
-            X, y = dataset.get_data_sequence()
+            X, y = dataset_val.get_data_sequence()
             X = torch.tensor(X, dtype = torch.float)
             y = torch.tensor(y, dtype = torch.float)
             val_loader.append((X, y))
@@ -94,7 +94,7 @@ def main(args):
         train_loss = train(train_loader, net, criterion, optimizer, device, num_unrolls = num_unrolls)
         val_loss = test(val_loader, net, criterion, device, num_unrolls = num_unrolls)
 
-        print('[Epoch %d / %d] train_loss: %.5f val_loss: %.5f' % (epoch, max_steps, train_loss, val_loss))
+        print('[Epoch %d / %d] train_loss: %.5f val_loss: %.5f video id: %d' % (epoch, max_steps, train_loss, val_loss, dataset_train.video_idx))
         torch.save(net.state_dict(), DESTINATION)
 
 
