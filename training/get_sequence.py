@@ -1,0 +1,193 @@
+import numpy as np
+import cv2
+
+import get_datasets
+
+import sys
+import os.path
+sys.path.append(os.path.abspath(os.path.join(
+    os.path.dirname(__file__), os.path.pardir)))
+
+from utils import im_util
+from utils import bb_util
+
+from constants import CROP_PAD
+from constants import CROP_SIZE
+from constants import LSTM_SIZE
+from constants import OUTPUT_WIDTH
+from constants import OUTPUT_HEIGHT
+from constants import LOG_DIR
+
+
+
+class Dataset(object):
+	# OUR IMPLEMENTATION
+	def __init__(self, delta):
+		self.delta = delta
+		self.datasets = []
+		self.datasets_path = []
+		self.key_lookup = dict()
+		self.seq_lookup = []  # seq_lookup[seq_idx] = line (in dataset_gt / labels.npy)
+		self.add_dataset('imagenet_video')
+		self.video_idx = 0
+		self.track_idx = 0
+		self.image_idx = 0  # 0 ~ 180,000
+		self.dataset_id = 0  # hard code. Modify later
+		self.seq_idx = 0  # seq index of the dataset videos. += 1 at the switch of the track_id or video_id. NOT current number of seq
+		self.cur_line = 0  # current line # in labels.npy. i.e. from 0 to 280,000
+
+
+	def add_dataset(self, dataset_name):
+		dataset_ind = len(self.datasets)
+		dataset_data = get_datasets.get_data_for_dataset(dataset_name, 'train')  # labels.npy: dim = X * 7 ...
+		dataset_gt = dataset_data['gt']
+		dataset_path = dataset_data['image_paths']
+
+		track_idx_cur = -1
+		video_idx_cur = -1
+		seq_idx = -1
+
+		for xx in range(dataset_gt.shape[0]):
+			line = dataset_gt[xx,:].astype(int)
+			self.key_lookup[(dataset_ind, line[4], line[5], line[6])] = xx  # 0 ~ 280,000
+			if line[4] != video_idx_cur or line[5] != track_idx_cur:
+				seq_idx += 1
+				self.seq_lookup.append(xx)
+				video_idx_cur = line[4]
+				track_idx_cur = line[5] 
+
+		self.datasets.append(dataset_gt)  
+		self.datasets_path.append(dataset_path)
+
+
+	def get_data(self):
+		# return images. len(images) = self.delta
+		images = [None] * self.delta
+		# line = self.key_lookup[(self.dataset_id, self.video_idx, self.track_idx, self.image_idx)]
+		line = self.cur_line
+		dataset_gt = self.datasets[self.dataset_id]
+		self.image_idx = dataset_gt[line, 6]
+		looking = True  # looking for a consecutive sequence
+		# check if there is enough images to generate a sequence with len == self.delta
+		
+		while looking:
+			# print('A = ', tuple(dataset_gt[line + self.delta - 1][4:7]))
+			# print('B = ', (self.video_idx, self.track_idx, self.image_idx+self.delta-1))
+			if tuple(dataset_gt[line + self.delta - 1, 4:7]) == (self.video_idx, self.track_idx, self.image_idx+self.delta-1):  #
+				# same consecutative video
+				looking = False
+				self.video_idx, self.track_idx, self.image_idx = dataset_gt[line][4:7]  # !!!
+			else:
+				print('seq..++')
+				self.seq_idx += 1
+				line = self.seq_lookup[self.seq_idx]
+				self.video_idx, self.track_idx, self.image_idx = dataset_gt[line][4:7]
+
+		gtKey = (self.dataset_id, self.video_idx, self.track_idx, self.image_idx) 
+
+		for i in range(self.delta):
+			# pull out image array
+			image_paths = self.datasets_path[self.dataset_id]
+			image_path_i = image_paths[line+i]
+			image_array = cv2.imread(image_path_i)
+			images[i] = image_array.copy()
+
+
+		self.cur_line = line + 1  # next possible seq's first line
+		return gtKey, images
+
+
+	def get_data_sequence(self):
+		tImage = np.zeros((self.delta, 2, CROP_SIZE, CROP_SIZE, 3), dtype=np.uint8)
+		xywhLabels = np.zeros((self.delta, 4), dtype=np.float32)
+
+		dataset_id = self.dataset_id
+		video_idx = self.video_idx
+		track_idx = self.track_idx
+		image_idx = self.image_idx
+
+		gtKey, images = self.get_data()  # return gtKey, images. len(images) = self.delta. gtKey points to the first line of the seq
+		print('gtkey = ', gtKey)
+		row = self.key_lookup[gtKey]  # 0 ~ 280,000, first row of the seq
+
+		# Initialize the first frame
+		initBox = self.datasets[gtKey[0]][row, :4].copy()
+
+		# bboxPrev starts at the initial box and is the best guess (or gt) for the image0 location.
+		bboxPrev = initBox
+		lstmState = None
+
+		for dd in range(self.delta):
+			newKey = list(gtKey)
+			newKey[3] += dd
+			newKey = tuple(newKey)
+			row = self.key_lookup[newKey]
+			
+			bboxOn = self.datasets[newKey[0]][row, :4].copy()
+			# print('row = ', bboxOn)
+			if dd == 0:
+			    noisyBox = bboxOn.copy()
+			else:
+				noisyBox = bboxOn.copy()  # add noise ! problem here???
+			    
+
+			tImage[dd, 0, ...], outputBox = im_util.get_cropped_input(images[max(dd-1, 0)], bboxPrev, CROP_PAD, CROP_SIZE)
+			tImage[dd,1,...] = im_util.get_cropped_input(images[dd], noisyBox, CROP_PAD, CROP_SIZE)[0]
+
+			shiftedBBox = bb_util.to_crop_coordinate_system(bboxOn, outputBox, 1, 227)  # why CROP_PAD
+			# print('shiftedBBox = ', shiftedBBox)
+			shiftedBBoxXYWH = bb_util.xyxy_to_xywh(shiftedBBox)
+			xywhLabels[dd,:] = shiftedBBoxXYWH
+
+			bboxPrev = bboxOn
+
+		# print('xywhLabels = ', xywhLabels)
+		tImage = tImage.reshape([self.delta * 2] + list(tImage.shape[2:]))
+		xyxyLabels = bb_util.xywh_to_xyxy(xywhLabels.T).T * 10
+		xyxyLabels = xyxyLabels.astype(np.float32)
+		tImage = tImage.transpose(0,3,1,2)
+		return tImage, xyxyLabels
+
+
+
+if __name__ == '__main__':
+	DEBUG = True
+
+	delta = 32
+	dataset = Dataset(delta)
+	print('created dataset')
+	old = None
+	# read tImage
+	num_seq = 0
+	NUM_SEQ = 20
+	Images = np.zeros((NUM_SEQ, delta*2, 3, CROP_SIZE, CROP_SIZE), dtype=np.uint8)
+	Labels = np.zeros((NUM_SEQ, delta, 4))
+	while num_seq < NUM_SEQ:
+		tImage, xyxyLabels = dataset.get_data_sequence()
+
+		if DEBUG:
+			if num_seq == 0:
+				old = xyxyLabels
+			else:
+				# print(np.sum(old - xyxyLabels))
+				old = xyxyLabels
+
+			print('video id = ', dataset.video_idx)
+			print('t_image shape = ', tImage.shape, 'xyxyLabels shape = ', xyxyLabels.shape)
+		else:
+			Images[num_seq, ...] = tImage.copy()
+			Labels[num_seq, ...] = xyxyLabels.copy()
+		num_seq += 1
+		print('current seq # = ', num_seq)
+
+	np.save('Images.npy', Images)
+	np.save('Labels.npy', Labels)
+
+	print('final seq idx = ', dataset.seq_idx)
+	print('done!')
+
+
+	Images_load = np.load('Images.npy')
+	Labels_load = np.load('Labels.npy')
+	print(Images_load.shape, Labels_load.shape)
+
