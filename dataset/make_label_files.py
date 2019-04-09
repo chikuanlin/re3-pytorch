@@ -123,6 +123,6 @@ def main(label_type):
         np.save('labels/' + label_type + '/labels.npy', bboxes)
 
 if __name__ == '__main__':
-    main('train')
-    # main('val')
+    # main('train')
+    main('val')
 

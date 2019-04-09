@@ -65,12 +65,11 @@ def main(args):
         net.eval()
     criterion = nn.L1Loss()
     optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate, weight_decay=5e-4)
-    max_steps = 2
     dataset = get_sequence.Dataset(32)
 
 
     print('Start Training: ')
-    for epoch in range(1, max_steps+1): 
+    for epoch in range(1, max_steps+1):
         # TODO: Data Loader
         # X = np.load('training/Images.npy')
         # y = np.load('training/Labels.npy')
@@ -104,7 +103,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training for Re3.')
     parser.add_argument('-n', '--num_unrolls', action='store', type=int, default=2)
     parser.add_argument('-m', '--max_steps', action='store', type=int, default=100)
-    parser.add_argument('-s', '--num_sequence', action='store', type=int, default=10)
+    parser.add_argument('-s', '--num_sequence', action='store', type=int, default=20)
     parser.add_argument('-l', '--learning_rate', action='store', type=float, default=1e-5)
     parser.add_argument('-p', '--model_path', action='store', type=str, default='checkpoint.pth')
     args = parser.parse_args()
