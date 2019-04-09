@@ -65,20 +65,75 @@ def get_cropped_input(inputImage, bbox, padScale, outputSize):
                         'constant', constant_values=0)
     return patch, outputBox
 
-def drawRect(image, bbox, padding, color):
-    import utils.bb_util as bb_util
-    imageHeight = image.shape[0]
-    imageWidth = image.shape[1]
-    bbox = np.round(np.array(bbox)) # mostly just for copying
-    bbox = bb_util.clip_bbox(bbox, padding, imageWidth - padding, imageHeight - padding).astype(int).squeeze()
-    padding = int(padding)
-    image[bbox[1]-padding:bbox[3]+padding+1,
-            bbox[0]-padding:bbox[0]+padding+1] = color
-    image[bbox[1]-padding:bbox[3]+padding+1,
-            bbox[2]-padding:bbox[2]+padding+1] = color
-    image[bbox[1]-padding:bbox[1]+padding+1,
-            bbox[0]-padding:bbox[2]+padding+1] = color
-    image[bbox[3]-padding:bbox[3]+padding+1,
-            bbox[0]-padding:bbox[2]+padding+1] = color
-    return image
+# def drawRect(image, bbox, padding, color):
+#     import utils.bb_util as bb_util
+#     imageHeight = image.shape[0]
+#     imageWidth = image.shape[1]
+#     bbox = np.round(np.array(bbox)) # mostly just for copying
+#     bbox = bb_util.clip_bbox(bbox, padding, imageWidth - padding, imageHeight - padding).astype(int).squeeze()
+#     padding = int(padding)
+#     image[bbox[1]-padding:bbox[3]+padding+1,
+#             bbox[0]-padding:bbox[0]+padding+1] = color
+#     image[bbox[1]-padding:bbox[3]+padding+1,
+#             bbox[2]-padding:bbox[2]+padding+1] = color
+#     image[bbox[1]-padding:bbox[1]+padding+1,
+#             bbox[0]-padding:bbox[2]+padding+1] = color
+#     image[bbox[3]-padding:bbox[3]+padding+1,
+#             bbox[0]-padding:bbox[2]+padding+1] = color
+#     return image
 
+
+def get_image_size(fname):
+    import struct, imghdr, re
+    '''Determine the image type of fhandle and return its size.
+    from draco'''
+    # Only a loop so we can break. Should never run more than once.
+    while True:
+        with open(fname, 'rb') as fhandle:
+            head = fhandle.read(32)
+            if len(head) != 32:
+                break
+            if imghdr.what(fname) == 'png':
+                check = struct.unpack('>i', head[4:8])[0]
+                if check != 0x0d0a1a0a:
+                    break
+                width, height = struct.unpack('>ii', head[16:24])
+            elif imghdr.what(fname) == 'gif':
+                width, height = struct.unpack('<HH', head[6:10])
+            elif imghdr.what(fname) == 'jpeg':
+                try:
+                    fhandle.seek(0) # Read 0xff next
+                    size = 2
+                    ftype = 0
+                    while not 0xc0 <= ftype <= 0xcf:
+                        fhandle.seek(size, 1)
+                        byte = fhandle.read(1)
+                        while ord(byte) == 0xff:
+                            byte = fhandle.read(1)
+                        ftype = ord(byte)
+                        size = struct.unpack('>H', fhandle.read(2))[0] - 2
+                    # We are at a SOFn block
+                    fhandle.seek(1, 1)  # Skip `precision' byte.
+                    height, width = struct.unpack('>HH', fhandle.read(4))
+                except Exception: #IGNORE:W0703
+                    break
+            elif imghdr.what(fname) == 'pgm':
+                header, width, height, maxval = re.search(
+                    b"(^P5\s(?:\s*#.*[\r\n])*"
+                    b"(\d+)\s(?:\s*#.*[\r\n])*"
+                    b"(\d+)\s(?:\s*#.*[\r\n])*"
+                    b"(\d+)\s(?:\s*#.*[\r\n]\s)*)", head).groups()
+                width = int(width)
+                height = int(height)
+            elif imghdr.what(fname) == 'bmp':
+                _, width, height, depth = re.search(
+                    b"((\d+)\sx\s"
+                    b"(\d+)\sx\s"
+                    b"(\d+))", str).groups()
+                width = int(width)
+                height = int(height)
+            else:
+                break
+            return width, height
+    imShape = cv2.imread(fname).shape
+    return imShape[1], imShape[0]
