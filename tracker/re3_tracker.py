@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(
 from tracker.network import Re3Net
 import utils.bb_util as bb_util
 import utils.im_util as im_util
-
+from training import get_sequence
 from constants import CROP_PAD
 from constants import CROP_SIZE
 
@@ -77,12 +77,10 @@ class Re3Tracker(object):
         self.tracked_data = {}
 
 if __name__ == "__main__":
-    tracker = Re3Tracker(None, 'cpu')
-    # x = np.load('labels.npy')
-    # label = x[0,:4]
-    # print('label', label)
-    # img = cv2.imread('ILSVRC/ILSVRC2015_train_00000000/000000.JPEG')
-    # print(tracker.track(1,img,label))
-    # print(tracker.track(1,img))
-    # print(tracker.track(1,img))
-    # print(tracker.track(1,img))
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    net = Re3Net().to(device)
+    net.load_state_dict(torch.load('checkpoint.pth'))
+    net.eval()
+    tracker = Re3Tracker(net, device)
+
+
