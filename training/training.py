@@ -94,7 +94,7 @@ def main(args):
         train_loss = train(train_loader, net, criterion, optimizer, device, num_unrolls = num_unrolls)
         val_loss = test(val_loader, net, criterion, device, num_unrolls = num_unrolls)
 
-        print('[Epoch %d / %d] train_loss: %.5f val_loss: %.5f video id: %d' % (epoch, max_steps, train_loss, val_loss, dataset.video_idx))
+        print('[Epoch %d / %d] train_loss: %.5f val_loss: %.5f video id: %d' % (epoch, max_steps, train_loss, val_loss, dataset_train.video_idx))
         torch.save(net.state_dict(), DESTINATION)
 
 
