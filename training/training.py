@@ -15,7 +15,8 @@ import os.path
 sys.path.append(os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir)))
 from tracker.network import Re3Net
-from training import get_sequence
+#from training import get_sequence
+import get_sequence
 
 def train(trainloader, net, criterion, optimizer, device, num_unrolls = 2):
     running_loss = 0.0
