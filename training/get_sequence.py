@@ -22,7 +22,7 @@ from constants import LOG_DIR
 
 class Dataset(object):
 	# OUR IMPLEMENTATION
-	def __init__(self, delta, mode='train'):
+	def __init__(self, delta, mode='train', start_line=0):
 		self.delta = delta
 		self.datasets = []
 		self.datasets_path = []
@@ -34,7 +34,7 @@ class Dataset(object):
 		self.image_idx = 0  # 0 ~ 180,000
 		self.dataset_id = 0  # hard code. Modify later
 		self.seq_idx = 0  # seq index of the dataset videos. += 1 at the switch of the track_id or video_id. NOT current number of seq
-		self.cur_line = 0  # current line # in labels.npy. i.e. from 0 to 280,000
+		self.cur_line = start_line  # current line # in labels.npy. i.e. from 0 to 280,000
 
 
 	def add_dataset(self, dataset_name, mode):
@@ -66,7 +66,9 @@ class Dataset(object):
 		# line = self.key_lookup[(self.dataset_id, self.video_idx, self.track_idx, self.image_idx)]
 		line = self.cur_line
 		dataset_gt = self.datasets[self.dataset_id]
-		self.image_idx = dataset_gt[line, 6]
+		# self.image_idx = dataset_gt[line, 6]
+		self.video_idx, self.track_idx, self.image_idx = dataset_gt[line, 4:7]
+
 		looking = True  # looking for a consecutive sequence
 		# check if there is enough images to generate a sequence with len == self.delta
 		
