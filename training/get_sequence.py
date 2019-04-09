@@ -22,13 +22,13 @@ from constants import LOG_DIR
 
 class Dataset(object):
 	# OUR IMPLEMENTATION
-	def __init__(self, delta):
+	def __init__(self, delta, mode='train'):
 		self.delta = delta
 		self.datasets = []
 		self.datasets_path = []
 		self.key_lookup = dict()
 		self.seq_lookup = []  # seq_lookup[seq_idx] = line (in dataset_gt / labels.npy)
-		self.add_dataset('imagenet_video')
+		self.add_dataset('imagenet_video', mode)
 		self.video_idx = 0
 		self.track_idx = 0
 		self.image_idx = 0  # 0 ~ 180,000
@@ -37,9 +37,9 @@ class Dataset(object):
 		self.cur_line = 0  # current line # in labels.npy. i.e. from 0 to 280,000
 
 
-	def add_dataset(self, dataset_name):
+	def add_dataset(self, dataset_name, mode):
 		dataset_ind = len(self.datasets)
-		dataset_data = get_datasets.get_data_for_dataset(dataset_name, 'train')  # labels.npy: dim = X * 7 ...
+		dataset_data = get_datasets.get_data_for_dataset(dataset_name, mode)  # labels.npy: dim = X * 7 ...
 		dataset_gt = dataset_data['gt']
 		dataset_path = dataset_data['image_paths']
 
@@ -107,7 +107,7 @@ class Dataset(object):
 		image_idx = self.image_idx
 
 		gtKey, images = self.get_data()  # return gtKey, images. len(images) = self.delta. gtKey points to the first line of the seq
-		print('gtkey = ', gtKey)
+		# print('gtkey = ', gtKey)
 		row = self.key_lookup[gtKey]  # 0 ~ 280,000, first row of the seq
 
 		# Initialize the first frame
@@ -145,7 +145,7 @@ class Dataset(object):
 		tImage = tImage.reshape([self.delta * 2] + list(tImage.shape[2:]))
 		xyxyLabels = bb_util.xywh_to_xyxy(xywhLabels.T).T * 10
 		xyxyLabels = xyxyLabels.astype(np.float32)
-		tImage = tImage.transpose(0,3,1,2) 
+		tImage = tImage.transpose(0,3,1,2)
 		return tImage, xyxyLabels
 
 
