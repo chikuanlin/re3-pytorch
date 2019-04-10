@@ -124,5 +124,5 @@ def main(label_type):
 
 if __name__ == '__main__':
     # main('train')
-    main('val')
+    main('test')
 
