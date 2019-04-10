@@ -27,14 +27,16 @@ class Dataset(object):
 		self.datasets = []
 		self.datasets_path = []
 		self.key_lookup = dict()
+		self.seq_idx_lookup = dict()
 		self.seq_lookup = []  # seq_lookup[seq_idx] = line (in dataset_gt / labels.npy)
 		self.add_dataset('imagenet_video', mode)
 		self.video_idx = 0
 		self.track_idx = 0
 		self.image_idx = 0  # 0 ~ 180,000
 		self.dataset_id = 0  # hard code. Modify later
-		self.seq_idx = 0  # seq index of the dataset videos. += 1 at the switch of the track_id or video_id. NOT current number of seq
 		self.cur_line = start_line  # current line # in labels.npy. i.e. from 0 to 280,000
+		self.seq_idx = self.seq_idx_lookup[start_line]  # seq index of the dataset videos. += 1 at the switch of the track_id or video_id. NOT current number of seq
+
 
 
 	def add_dataset(self, dataset_name, mode):
@@ -45,7 +47,7 @@ class Dataset(object):
 
 		track_idx_cur = -1
 		video_idx_cur = -1
-		seq_idx = -1
+		seq_idx = 0
 
 		for xx in range(dataset_gt.shape[0]):
 			line = dataset_gt[xx,:].astype(int)
@@ -55,7 +57,7 @@ class Dataset(object):
 				self.seq_lookup.append(xx)
 				video_idx_cur = line[4]
 				track_idx_cur = line[5] 
-
+			self.seq_idx_lookup[xx] = seq_idx
 		self.datasets.append(dataset_gt)  
 		self.datasets_path.append(dataset_path)
 
@@ -156,16 +158,18 @@ if __name__ == '__main__':
 	DEBUG = True
 
 	delta = 32
-	dataset = Dataset(delta)
+	dataset = Dataset(delta, start_line=2900)
 	print('created dataset')
+	# print(dataset.key_lookup[(0,11,0,0)])
 	old = None
 	# read tImage
 	num_seq = 0
-	NUM_SEQ = 20
+	NUM_SEQ = 1000
 	Images = np.zeros((NUM_SEQ, delta*2, 3, CROP_SIZE, CROP_SIZE), dtype=np.uint8)
 	Labels = np.zeros((NUM_SEQ, delta, 4))
 	while num_seq < NUM_SEQ:
 		tImage, xyxyLabels = dataset.get_data_sequence()
+		print('video_idx', dataset.video_idx)
 
 		if DEBUG:
 			if num_seq == 0:
@@ -184,15 +188,15 @@ if __name__ == '__main__':
 		print('current seq # = ', num_seq)
 
 
-	np.save('Images.npy', Images)
-	np.save('Labels.npy', Labels)
+	# np.save('Images.npy', Images)
+	# np.save('Labels.npy', Labels)
 
 	print('final seq idx = ', dataset.seq_idx)
 	print('done!')
 
 
-	Images_load = np.load('Images.npy')
-	Labels_load = np.load('Labels.npy')
-	print(Images_load.shape, Labels_load.shape)
-	print('images load = ', np.sum(Images_load))
-	print('label load = ', Labels_load[0,0:5,:])
+	# Images_load = np.load('Images.npy')
+	# Labels_load = np.load('Labels.npy')
+	# print(Images_load.shape, Labels_load.shape)
+	# print('images load = ', np.sum(Images_load))
+	# print('label load = ', Labels_load[0,0:5,:])
