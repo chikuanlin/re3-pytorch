@@ -57,7 +57,7 @@ def main(args):
     num_sequence = args.num_sequence
     PATH = args.model_path
 
-    start_line = np.load('start_line.npy')
+    start_line = np.loadtxt('start_line.txt', dtype=int)
 
     # Re3Net Set up
     net = Re3Net().to(device)
@@ -99,7 +99,7 @@ def main(args):
         torch.save(net.state_dict(), DESTINATION)
         start_line[0] = dataset_train.cur_line
         start_line[1] = dataset_val.cur_line
-        np.save('start_line.npy', start_line)
+        np.savetxt('start_line.txt', start_line)
 
 
 
