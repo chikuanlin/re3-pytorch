@@ -37,7 +37,7 @@ class Dataset(object):
 		self.dataset_id = 0  # hard code. Modify later
 		self.cur_line = start_line  # current line # in labels.npy. i.e. from 0 to 280,000
 		self.seq_idx = self.seq_idx_lookup[start_line]  # seq index of the dataset videos. += 1 at the switch of the track_id or video_id. NOT current number of seq
-		print('initial seq_idx = ', self.seq_idx)
+		# print('initial seq_idx = ', self.seq_idx)
 		self.stride = stride
 
 
@@ -211,7 +211,8 @@ if __name__ == '__main__':
 	for i in range(image.shape[0]):
 		# print(i)
 		im = image[i, ...].transpose(1,2,0).copy()
-		bbox = labels[i//2, ...].copy()
+		bbox = 227*labels[i//2, ...].copy()/10
+		print('bbox = ', bbox)
 		patch = drawing.drawRect(im, bbox, 1, (255,255,0))
 		# print(im.shape)
 
