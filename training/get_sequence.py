@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(
 
 from utils import im_util
 from utils import bb_util
+from utils import drawing
 
 from constants import CROP_PAD
 from constants import CROP_SIZE
@@ -22,7 +23,7 @@ from constants import LOG_DIR
 
 class Dataset(object):
 	# OUR IMPLEMENTATION
-	def __init__(self, delta, mode='train', start_line=0):
+	def __init__(self, delta, mode='train', start_line=0, stride=1):
 		self.delta = delta
 		self.datasets = []
 		self.datasets_path = []
@@ -36,6 +37,8 @@ class Dataset(object):
 		self.dataset_id = 0  # hard code. Modify later
 		self.cur_line = start_line  # current line # in labels.npy. i.e. from 0 to 280,000
 		self.seq_idx = self.seq_idx_lookup[start_line]  # seq index of the dataset videos. += 1 at the switch of the track_id or video_id. NOT current number of seq
+		print('initial seq_idx = ', self.seq_idx)
+		self.stride = stride
 
 
 
@@ -47,7 +50,7 @@ class Dataset(object):
 
 		track_idx_cur = -1
 		video_idx_cur = -1
-		seq_idx = 0
+		seq_idx = -1
 
 		for xx in range(dataset_gt.shape[0]):
 			line = dataset_gt[xx,:].astype(int)
@@ -68,7 +71,7 @@ class Dataset(object):
 		# line = self.key_lookup[(self.dataset_id, self.video_idx, self.track_idx, self.image_idx)]
 		line = self.cur_line
 		dataset_gt = self.datasets[self.dataset_id]
-		# self.image_idx = dataset_gt[line, 6]
+
 		self.video_idx, self.track_idx, self.image_idx = dataset_gt[line, 4:7]
 
 		looking = True  # looking for a consecutive sequence
@@ -82,9 +85,10 @@ class Dataset(object):
 				looking = False
 				self.video_idx, self.track_idx, self.image_idx = dataset_gt[line][4:7]  # !!!
 			else:
-				print('seq..++')
+				print('seq..++', self.seq_idx)
 				self.seq_idx += 1
 				line = self.seq_lookup[self.seq_idx]
+				# print('line = ', line)
 				self.video_idx, self.track_idx, self.image_idx = dataset_gt[line][4:7]
 
 		gtKey = (self.dataset_id, self.video_idx, self.track_idx, self.image_idx) 
@@ -92,12 +96,17 @@ class Dataset(object):
 		for i in range(self.delta):
 			# pull out image array
 			image_paths = self.datasets_path[self.dataset_id]
-			image_path_i = image_paths[line+i]
+			image_path_i = image_paths[self.image_idx+i]
 			image_array = cv2.imread(image_path_i)
 			images[i] = image_array.copy()
 
 
-		self.cur_line = line + 1  # next possible seq's first line
+		self.cur_line = line + self.stride  # next possible seq's first line
+		if self.seq_idx_lookup[self.cur_line] > self.seq_idx:
+			print('seq++ due to stride')
+			# always make sure that self.cur_line is consistent with self.seq_idx
+			self.seq_idx += 1
+			self.cur_line = self.seq_lookup[self.seq_idx]
 		return gtKey, images
 
 
@@ -155,21 +164,21 @@ class Dataset(object):
 
 
 if __name__ == '__main__':
-	DEBUG = True
+	DEBUG = False
 
 	delta = 32
-	dataset = Dataset(delta, start_line=2900)
+	dataset = Dataset(delta, start_line=0, stride=31)
 	print('created dataset')
 	# print(dataset.key_lookup[(0,11,0,0)])
 	old = None
 	# read tImage
 	num_seq = 0
-	NUM_SEQ = 1000
+	NUM_SEQ = 34
 	Images = np.zeros((NUM_SEQ, delta*2, 3, CROP_SIZE, CROP_SIZE), dtype=np.uint8)
 	Labels = np.zeros((NUM_SEQ, delta, 4))
 	while num_seq < NUM_SEQ:
 		tImage, xyxyLabels = dataset.get_data_sequence()
-		print('video_idx', dataset.video_idx)
+		print('video_idx', dataset.video_idx, 'track_idx', dataset.track_idx)
 
 		if DEBUG:
 			if num_seq == 0:
@@ -193,8 +202,20 @@ if __name__ == '__main__':
 
 	print('final seq idx = ', dataset.seq_idx)
 	print('done!')
+	print('Checking images... ')
 
+	path = './test/'
+	idx = 15   # random
+	image = Images[idx, ...].copy()
+	labels = Labels[idx, ...].copy()
+	for i in range(image.shape[0]):
+		# print(i)
+		im = image[i, ...].transpose(1,2,0).copy()
+		bbox = labels[i//2, ...].copy()
+		patch = drawing.drawRect(im, bbox, 1, (255,255,0))
+		# print(im.shape)
 
+		cv2.imwrite(path + str(i)+'.png', patch)
 	# Images_load = np.load('Images.npy')
 	# Labels_load = np.load('Labels.npy')
 	# print(Images_load.shape, Labels_load.shape)
