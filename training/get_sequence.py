@@ -23,7 +23,7 @@ from constants import LOG_DIR
 
 class Dataset(object):
 	# OUR IMPLEMENTATION
-	def __init__(self, delta, mode='train', start_line=0, stride=1):
+	def __init__(self, delta, mode='train', start_line=0, stride=15):
 		self.delta = delta
 		self.datasets = []
 		self.datasets_path = []
