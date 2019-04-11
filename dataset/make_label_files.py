@@ -13,16 +13,16 @@ sys.path.append(os.path.abspath(os.path.join(
 from utils import drawing
 from utils.im_util import get_image_size
 
-DEBUG = True
+DEBUG = False
 
 def main(label_type):
     folder = ['/ILSVRC2015_VID_train_0001/*/', '/ILSVRC2015_VID_train_0002/*/', '/ILSVRC2015_VID_train_0003/*/']
     for fol in folder:
         wildcard = fol if label_type == 'train' else '/*/'
         # dataset_path = 'data/ILSVRC2015/'
-        # dataset_path = '/media/yueshen/Sea_Gate!/imagenet/ILSVRC/'
+        dataset_path = '/media/yueshen/Sea_Gate!/imagenet/ILSVRC/'
         # google root directory
-        dataset_path = '/home/ILSVRC/'
+        # dataset_path = '/home/ILSVRC/'
         annotationPath = dataset_path + 'Annotations/'
         imagePath = dataset_path + 'Data/'
 
@@ -30,7 +30,7 @@ def main(label_type):
         if not DEBUG:
             if not os.path.exists(os.path.join('labels', label_type)):
                 os.makedirs(os.path.join('labels', label_type))
-            imageNameFile = open('labels/' + label_type + '/image_names.txt', 'w')
+            imageNameFile = open('labels/' + label_type + '/image_names' + str(fol[-4]) + '.txt', 'w')
 
         videos = sorted(glob.glob(annotationPath + 'VID/' + label_type + wildcard))
 
