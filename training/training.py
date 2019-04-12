@@ -99,7 +99,7 @@ def main(args):
         torch.save(net.state_dict(), DESTINATION)
         start_line[0] = dataset_train.cur_line
         start_line[1] = dataset_val.cur_line
-        np.savetxt('start_line.txt', start_line)
+        np.savetxt('start_line.txt', start_line, fmt = '%d')
 
 
 

@@ -20,9 +20,9 @@ def main(label_type):
     for fol in folder:
         wildcard = fol if label_type == 'train' else '/*/'
         # dataset_path = 'data/ILSVRC2015/'
-        dataset_path = '/media/yueshen/Sea_Gate!/imagenet/ILSVRC/'
+        # dataset_path = '/media/yueshen/Sea_Gate!/imagenet/ILSVRC/'
         # google root directory
-        # dataset_path = '/home/ILSVRC/'
+        dataset_path = '/home/ILSVRC/'
         annotationPath = dataset_path + 'Annotations/'
         imagePath = dataset_path + 'Data/'
 
