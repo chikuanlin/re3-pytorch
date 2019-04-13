@@ -16,6 +16,7 @@ sys.path.append(os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir)))
 from tracker.network import Re3Net
 import get_sequence
+import get_rand_sequence
 
 def train(trainloader, net, criterion, optimizer, device, num_unrolls = 2):
     running_loss = 0.0
@@ -57,7 +58,7 @@ def main(args):
     num_sequence = args.num_sequence
     PATH = args.model_path
 
-    start_line = np.loadtxt('start_line.txt', dtype=int)
+#     start_line = np.loadtxt('start_line.txt', dtype=int)
 
     # Re3Net Set up
     net = Re3Net().to(device)
@@ -66,9 +67,10 @@ def main(args):
         net.eval()
     criterion = nn.L1Loss()
     optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate, weight_decay=5e-4)
-    dataset_train = get_sequence.Dataset(32, start_line = start_line[0])
-    dataset_val = get_sequence.Dataset(32, 'val', start_line = start_line[1])
-
+#     dataset_train = get_sequence.Dataset(32, start_line = start_line[0])
+#     dataset_val = get_sequence.Dataset(32, 'val', start_line = start_line[1])
+    dataset_train = get_rand_sequence.Dataset(32)
+    dataset_val = get_rand_sequence.Dataset(32, 'val')
     print('Start Training: ')
     for epoch in range(1, max_steps+1):
         # TODO: Data Loader
@@ -97,9 +99,9 @@ def main(args):
 
         print('[Epoch %d / %d] train_loss: %.5f val_loss: %.5f video id: %d' % (epoch, max_steps, train_loss, val_loss, dataset_train.video_idx))
         torch.save(net.state_dict(), DESTINATION)
-        start_line[0] = dataset_train.cur_line
-        start_line[1] = dataset_val.cur_line
-        np.savetxt('start_line.txt', start_line, fmt = '%d')
+#         start_line[0] = dataset_train.cur_line
+#         start_line[1] = dataset_val.cur_line
+#         np.savetxt('start_line.txt', start_line, fmt = '%d')
 
 
 
