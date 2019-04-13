@@ -127,13 +127,14 @@ class Dataset(object):
 			if dd == 0:
 			    noisyBox = bboxOn.copy()
 			else:
-				noisyBox = bboxOn.copy()  # add noise ! problem here???
+				noisyBox = bboxPrev.copy()  # add noise ! problem here???
 			    
 
 			tImage[dd, 0, ...], outputBox = im_util.get_cropped_input(images[max(dd-1, 0)], bboxPrev, CROP_PAD, CROP_SIZE)
 			tImage[dd,1,...] = im_util.get_cropped_input(images[dd], noisyBox, CROP_PAD, CROP_SIZE)[0]
 
-			shiftedBBox = bb_util.to_crop_coordinate_system(bboxOn, outputBox, CROP_PAD, 1)  # why CROP_PAD
+			# shiftedBBox = bb_util.to_crop_coordinate_system(bboxOn, outputBox, CROP_PAD, 1)  # why CROP_PAD
+			shiftedBBox = bb_util.to_crop_coordinate_system(bboxOn, noisyBox, CROP_PAD, 1)
 			# print('shiftedBBox = ', shiftedBBox)
 			shiftedBBoxXYWH = bb_util.xyxy_to_xywh(shiftedBBox)
 			xywhLabels[dd,:] = shiftedBBoxXYWH
