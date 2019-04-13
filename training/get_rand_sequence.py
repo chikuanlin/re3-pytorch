@@ -181,7 +181,7 @@ if __name__ == '__main__':
 		Images[num_seq, ...] = tImage.copy()
 		Labels[num_seq, ...] = xyxyLabels.copy()
 		num_seq += 1
-		print('current seq # = ', num_seq)
+		print('current iter # = ', num_seq)
 
 
 	# np.save('Images.npy', Images)
