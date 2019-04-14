@@ -28,7 +28,7 @@ AREA_CUTOFF = 0.7
 
 class Dataset(object):
 	# OUR IMPLEMENTATION
-	def __init__(self, net, delta, mode='train', load_all=True, USE_NETWORK_PROB=0):
+	def __init__(self, net, device, delta, mode='train', load_all=True, USE_NETWORK_PROB=0):
 		self.net = net
 		self.delta = delta
 		self.datasets = []
@@ -47,7 +47,7 @@ class Dataset(object):
 		self.dataset_id = 0  # hard code. Modify later
 		self.cur_line = 0  # current line # in labels.npy. i.e. from 0 to 280,000
 		self.USE_NETWORK_PROB = USE_NETWORK_PROB
-
+		self.device = device
 
 	def add_dataset(self, dataset_name, mode, folder):
 		dataset_ind = len(self.datasets)
@@ -188,7 +188,8 @@ class Dataset(object):
 			if gtType < self.USE_NETWORK_PROB:
 				if dd < self.delta - 1:
 					self.net.eval()
-					image_tensor = torch.tensor(tImage[dd,...].transpose(0,3,1,2), dtype=torch.cuda.float)
+					image_tensor = torch.tensor(tImage[dd,...].transpose(0,3,1,2), dtype=torch.float)
+					image_tensor = image_tensor.to(self.device)
 					networkOuts, lstmState = self.net(image_tensor, prevLstmState=lstmState)
 
 					xyxyPred = networkOuts.squeeze() / 10
