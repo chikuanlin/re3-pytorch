@@ -97,7 +97,7 @@ class Dataset(object):
 		while GENERATE_RANDOM:
 			try:
 				# randomly select a folder/dataset_id
-				self.dataset_id = np.random.random_integers(1, 3)
+				self.dataset_id = np.random.random_integers(0, 3)
 				# randomly select the starting point/line in the entire labels.npy file 
 				self.cur_line = np.random.random_integers(0, self.len_labels[self.dataset_id]-1)
 				gtKey, images = self.get_data()  # return gtKey, images. len(images) = self.delta. gtKey points to the first line of the seq
