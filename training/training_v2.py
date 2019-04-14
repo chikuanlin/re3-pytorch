@@ -62,7 +62,7 @@ def main(args):
 
     dataset_train = get_rand_sequence.Dataset(net, num_unrolls, USE_NETWORK_PROB = use_net_prob)
     dataset_val = get_rand_sequence.Dataset(net, num_unrolls, mode = 'val')
-    
+
     print('Start Training: ')
     for epoch in range(1, max_steps+1):
         train_X = []
@@ -80,7 +80,7 @@ def main(args):
 
         val_X = []
         val_y = []
-        for _ in range(batch_size//10):
+        for _ in range(max(batch_size//10, 1)):
             X, y = dataset_val.get_data_sequence()            
             val_X.append(X)
             val_y.append(y)
