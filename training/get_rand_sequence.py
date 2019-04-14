@@ -186,8 +186,8 @@ class Dataset(object):
 
 			if gtType < self.USE_NETWORK_PROB:
 				if dd < self.delta - 1:
-					net.eval()
-					networkOuts, lstmState = net(tImage[dd,...].transpose(0,3,1,2), prevLstmState=lstmState)
+					self.net.eval()
+					networkOuts, lstmState = self.net(tImage[dd,...].transpose(0,3,1,2), prevLstmState=lstmState)
 
 					xyxyPred = networkOuts.squeeze() / 10
 					outputBox = bb_util.from_crop_coordinate_system(xyxyPred, noisyBox, CROP_PAD, 1)
