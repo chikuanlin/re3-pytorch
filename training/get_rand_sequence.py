@@ -91,40 +91,40 @@ class Dataset(object):
 
 		return gtKey, images
 
-	    # Randomly jitter the box for a bit of noise.
-    def add_noise(self, bbox, prevBBox, imageWidth, imageHeight):
-        numTries = 0
-        bboxXYWHInit = bb_util.xyxy_to_xywh(bbox)
-        while numTries < 10:
-            bboxXYWH = bboxXYWHInit.copy()
-            centerNoise = np.random.laplace(0,1.0/5,2) * bboxXYWH[[2,3]]
-            sizeNoise = np.clip(np.random.laplace(1,1.0/15,2), .6, 1.4)
-            bboxXYWH[[2,3]] *= sizeNoise
-            bboxXYWH[[0,1]] = bboxXYWH[[0,1]] + centerNoise
-            if not (bboxXYWH[0] < prevBBox[0] or bboxXYWH[1] < prevBBox[1] or
-                bboxXYWH[0] > prevBBox[2] or bboxXYWH[1] > prevBBox[3] or
-                bboxXYWH[0] < 0 or bboxXYWH[1] < 0 or
-                bboxXYWH[0] > imageWidth or bboxXYWH[1] > imageHeight):
-                numTries = 10
-            else:
-                numTries += 1
+	# Randomly jitter the box for a bit of noise.
+	def add_noise(self, bbox, prevBBox, imageWidth, imageHeight):
+		numTries = 0
+		bboxXYWHInit = bb_util.xyxy_to_xywh(bbox)
+		while numTries < 10:
+			bboxXYWH = bboxXYWHInit.copy()
+			centerNoise = np.random.laplace(0,1.0/5,2) * bboxXYWH[[2,3]]
+			sizeNoise = np.clip(np.random.laplace(1,1.0/15,2), .6, 1.4)
+			bboxXYWH[[2,3]] *= sizeNoise
+			bboxXYWH[[0,1]] = bboxXYWH[[0,1]] + centerNoise
+			if not (bboxXYWH[0] < prevBBox[0] or bboxXYWH[1] < prevBBox[1] or
+				bboxXYWH[0] > prevBBox[2] or bboxXYWH[1] > prevBBox[3] or
+				bboxXYWH[0] < 0 or bboxXYWH[1] < 0 or
+				bboxXYWH[0] > imageWidth or bboxXYWH[1] > imageHeight):
+				numTries = 10
+			else:
+				numTries += 1
 
-        return self.fix_bbox_intersection(bb_util.xywh_to_xyxy(bboxXYWH), prevBBox, imageWidth, imageHeight)
+		return self.fix_bbox_intersection(bb_util.xywh_to_xyxy(bboxXYWH), prevBBox, imageWidth, imageHeight)
 
 
-    # Make sure there is a minimum intersection with the ground truth box and the visible crop.
-    def fix_bbox_intersection(self, bbox, gtBox, imageWidth, imageHeight):
-        if type(bbox) == list:
-            bbox = np.array(bbox)
-        if type(gtBox) == list:
-            gtBox = np.array(gtBox)
+	# Make sure there is a minimum intersection with the ground truth box and the visible crop.
+	def fix_bbox_intersection(self, bbox, gtBox, imageWidth, imageHeight):
+		if type(bbox) == list:
+			bbox = np.array(bbox)
+		if type(gtBox) == list:
+			gtBox = np.array(gtBox)
 
-        gtBoxArea = float((gtBox[3] - gtBox[1]) * (gtBox[2] - gtBox[0]))
-        bboxLarge = bb_util.scale_bbox(bbox, CROP_PAD)
-        while IOU.intersection(bboxLarge, gtBox) / gtBoxArea < AREA_CUTOFF:
-            bbox = bbox * .9 + gtBox * .1
-            bboxLarge = bb_util.scale_bbox(bbox, CROP_PAD)
-        return bbox
+		gtBoxArea = float((gtBox[3] - gtBox[1]) * (gtBox[2] - gtBox[0]))
+		bboxLarge = bb_util.scale_bbox(bbox, CROP_PAD)
+		while IOU.intersection(bboxLarge, gtBox) / gtBoxArea < AREA_CUTOFF:
+			bbox = bbox * .9 + gtBox * .1
+			bboxLarge = bb_util.scale_bbox(bbox, CROP_PAD)
+		return bbox
 
 
 
@@ -169,9 +169,8 @@ class Dataset(object):
 			# print('row = ', bboxOn)
 			if dd == 0:
 			    noisyBox = bboxOn.copy()
-            else:
-                noisyBox = self.fix_bbox_intersection(bboxPrev, bboxOn, images[0].shape[1], images[0].shape[0])
-			    
+			else:
+				noisyBox = self.fix_bbox_intersection(bboxPrev, bboxOn, images[0].shape[1], images[0].shape[0])
 
 			tImage[dd, 0, ...], outputBox = im_util.get_cropped_input(images[max(dd-1, 0)], bboxPrev, CROP_PAD, CROP_SIZE)
 			tImage[dd,1,...] = im_util.get_cropped_input(images[dd], noisyBox, CROP_PAD, CROP_SIZE)[0]
@@ -185,11 +184,12 @@ class Dataset(object):
 
 			if gtType < USE_NETWORK_PROB:
 				if dd < self.delta - 1:
+					net.eval()
 					networkOuts, lstmState = net(tImage[dd,...].transpose(0,3,1,2), prevLstmState=lstmState)
 
 					xyxyPred = networkOuts.squeeze() / 10
-                    outputBox = bb_util.from_crop_coordinate_system(xyxyPred, noisyBox, CROP_PAD, 1)
-                    boxPrev = outputBox
+					outputBox = bb_util.from_crop_coordinate_system(xyxyPred, noisyBox, CROP_PAD, 1)
+					boxPrev = outputBox
 
 			else:
 				bboxPrev = bboxOn
