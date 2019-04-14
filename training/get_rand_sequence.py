@@ -183,7 +183,7 @@ class Dataset(object):
 			xywhLabels[dd,:] = shiftedBBoxXYWH
 
 
-			if gtType < USE_NETWORK_PROB and mode == 'train':
+			if gtType < USE_NETWORK_PROB:
 				if dd < self.delta - 1:
 					networkOuts, lstmState = net(tImage[dd,...].transpose(0,3,1,2), prevLstmState=lstmState)
 
