@@ -32,6 +32,7 @@ class Dataset(object):
 		self.datasets_path = []
 		self.key_lookup = dict()
 		self.len_labels = []
+		self.mode = mode
 		if load_all:
 			self.add_dataset('imagenet_video', mode, 0)
 			self.add_dataset('imagenet_video', mode, 1)
@@ -182,7 +183,7 @@ class Dataset(object):
 			xywhLabels[dd,:] = shiftedBBoxXYWH
 
 
-			if gtType < USE_NETWORK_PROB:
+			if gtType < USE_NETWORK_PROB and mode == 'train':
 				if dd < self.delta - 1:
 					networkOuts, lstmState = net(tImage[dd,...].transpose(0,3,1,2), prevLstmState=lstmState)
 
