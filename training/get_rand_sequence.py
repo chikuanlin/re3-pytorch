@@ -6,6 +6,7 @@ import get_datasets
 import sys
 import os.path
 import random
+import torch
 sys.path.append(os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir)))
 
@@ -187,7 +188,8 @@ class Dataset(object):
 			if gtType < self.USE_NETWORK_PROB:
 				if dd < self.delta - 1:
 					self.net.eval()
-					networkOuts, lstmState = self.net(tImage[dd,...].transpose(0,3,1,2), prevLstmState=lstmState)
+					image_tensor = torch.tensor(tImage[dd,...].transpose(0,3,1,2), dtype=torch.float)
+					networkOuts, lstmState = self.net(image_tensor, prevLstmState=lstmState)
 
 					xyxyPred = networkOuts.squeeze() / 10
 					outputBox = bb_util.from_crop_coordinate_system(xyxyPred, noisyBox, CROP_PAD, 1)
