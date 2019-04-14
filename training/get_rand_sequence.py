@@ -188,7 +188,7 @@ class Dataset(object):
 			if gtType < self.USE_NETWORK_PROB:
 				if dd < self.delta - 1:
 					self.net.eval()
-					image_tensor = torch.tensor(tImage[dd,...].transpose(0,3,1,2), dtype=torch.float)
+					image_tensor = torch.tensor(tImage[dd,...].transpose(0,3,1,2), dtype=torch.cuda.float)
 					networkOuts, lstmState = self.net(image_tensor, prevLstmState=lstmState)
 
 					xyxyPred = networkOuts.squeeze() / 10
