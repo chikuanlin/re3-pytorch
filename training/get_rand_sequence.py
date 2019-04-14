@@ -74,7 +74,7 @@ class Dataset(object):
 
 		gtKey = (self.dataset_id, self.video_idx, self.track_idx, self.image_idx)
 
-		print(self.dataset_id, self.cur_line, self.video_idx)
+		#print(self.dataset_id, self.cur_line, self.video_idx)
 
 		for i in range(self.delta):
 			# pull out image array
@@ -103,8 +103,8 @@ class Dataset(object):
 				gtKey, images = self.get_data()  # return gtKey, images. len(images) = self.delta. gtKey points to the first line of the seq
 				GENERATE_RANDOM = False
 			except ValueError as err:
-				print('Re-generating random number:', err)
-
+				#print('Re-generating random number:', err)
+				pass
 
 		# print('gtkey = ', gtKey)
 		row = self.key_lookup[gtKey]  # 0 ~ 280,000, first row of the seq, in a dataset
