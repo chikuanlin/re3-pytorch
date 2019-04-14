@@ -60,8 +60,8 @@ def main(args):
     criterion = nn.L1Loss()
     optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate, weight_decay=5e-4)
 
-    dataset_train = get_rand_sequence.Dataset(net, num_unrolls, USE_NETWORK_PROB = use_net_prob)
-    dataset_val = get_rand_sequence.Dataset(net, num_unrolls, mode = 'val')
+    dataset_train = get_rand_sequence.Dataset(net, device, num_unrolls, USE_NETWORK_PROB = use_net_prob)
+    dataset_val = get_rand_sequence.Dataset(net, device, num_unrolls, mode = 'val')
 
     print('Start Training: ')
     for epoch in range(1, max_steps+1):
