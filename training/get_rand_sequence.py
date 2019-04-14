@@ -12,6 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(
 from utils import im_util
 from utils import bb_util
 from utils import drawing
+from utils import IOU
 
 from constants import CROP_PAD
 from constants import CROP_SIZE
@@ -183,7 +184,7 @@ class Dataset(object):
 			xywhLabels[dd,:] = shiftedBBoxXYWH
 
 
-			if gtType < USE_NETWORK_PROB:
+			if gtType < self.USE_NETWORK_PROB:
 				if dd < self.delta - 1:
 					net.eval()
 					networkOuts, lstmState = net(tImage[dd,...].transpose(0,3,1,2), prevLstmState=lstmState)
