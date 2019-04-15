@@ -193,7 +193,7 @@ class Dataset(object):
 					networkOuts, lstmState = self.net(image_tensor, prevLstmState=lstmState)
 
 					xyxyPred = networkOuts.squeeze() / 10
-					outputBox = bb_util.from_crop_coordinate_system(xyxyPred.data.numpy(), noisyBox, CROP_PAD, 1)
+					outputBox = bb_util.from_crop_coordinate_system(xyxyPred.cpu().data.numpy(), noisyBox, CROP_PAD, 1)
 					boxPrev = outputBox
 
 			else:
