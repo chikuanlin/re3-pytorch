@@ -17,16 +17,18 @@ import utils.drawing as drawing
 from constants import CROP_PAD
 from constants import CROP_SIZE
 
+MAX_TRACK_LENGTH = 16
+
 class Re3Tracker(object):
-    def __init__(self, model_path, device):
-        self.net = Re3Net().to(device)
+    def __init__(self, model_path = 'checkpoint.pth'):
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.net = Re3Net().to(self.device)
         if model_path is not None:
-            if device.type == "cpu":
+            if self.device.type == "cpu":
                 self.net.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
             else:
                 self.net.load_state_dict(torch.load(model_path))
         self.net.eval()
-        self.device = device
         self.tracked_data = {}
 
     def track(self, id, image, bbox = None):
@@ -51,7 +53,7 @@ class Re3Tracker(object):
         
         with torch.no_grad():
             network_input = network_input.to(self.device)
-            network_output, lstm_state = self.net(network_input, prevLstmState = lstm_state)
+            network_predicted_bbox, lstm_state = self.net(network_input, prevLstmState = lstm_state)
 
         if forward_count == 0:
             state1_h = lstm_state[0][0].clone()
@@ -61,23 +63,32 @@ class Re3Tracker(object):
             initial_state = ((state1_h, state1_c), (state2_h, state2_c))
             
         prev_image = image
-        # ***** padding = 1 or 2
-        output_bbox = bb_util.from_crop_coordinate_system(network_output.data.numpy()/10, past_bbox_padded, CROP_PAD, 1)
+
+        predicted_bbox = bb_util.from_crop_coordinate_system(network_predicted_bbox.cpu().data.numpy()/10, past_bbox_padded, 1, 1)
 
         # Reset state
-        if forward_count > 0 and forward_count % 32 == 0:
-            lstm_state = None
+        if forward_count > 0 and forward_count % MAX_TRACK_LENGTH == 0:
+            lstm_state = initial_state
+            # lstm_state = None
 
         forward_count += 1
 
         if bbox is not None:
-            output_bbox = bbox
+            predicted_bbox = bbox
 
-        output_bbox = output_bbox.reshape(4)
+        predicted_bbox = predicted_bbox.reshape(4)
+        if predicted_bbox[0] < 0:
+            predicted_bbox[0] = 0
+        if predicted_bbox[1] < 0:
+            predicted_bbox[1] = 0
+        if predicted_bbox[2] > image.shape[1]:
+            predicted_bbox[2] = image.shape[1]-1
+        if predicted_bbox[3] > image.shape[0]:
+            predicted_bbox[3] = image.shape[0]-1 
 
-        self.tracked_data[id] = (lstm_state, initial_state, output_bbox, prev_image, forward_count)
+        self.tracked_data[id] = (lstm_state, initial_state, predicted_bbox, prev_image, forward_count)
         
-        return output_bbox
+        return predicted_bbox
 
     def reset(self):
         self.tracked_data = {}
@@ -85,20 +96,35 @@ class Re3Tracker(object):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Tracking with Re3Net.')
     parser.add_argument('-p', '--path', action='store', type=str)
-    parser.add_argument('-b', '--bbox', action='store', type=str)
+    parser.add_argument('-b', '--init_bbox', action='store', type=str, help = "In string format: \"xmin ymin xmax ymax\" ")
     args = parser.parse_args()
     PATH = args.path
-    bbox = args.bbox
-    bbox = np.array([int(b) for b in bbox.split()])
+    # init_bbox = np.array([int(i) for i in args.init_bbox.split()], dtype = float)
+    # PATH = 'ILSVRC/ILSVRC2015_train_00034002/'
+    PATH = 'VOT/'
     paths = [PATH + f for f in os.listdir(PATH)]
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    tracker = Re3Tracker('checkpoint.pth', device)
-    print('start_bbox', bbox)
-    for i in range(len(paths)):
+    tracker = Re3Tracker('checkpoint.pth')
+
+    x = np.load('labels.npy')
+    # start_bbox = x[0,:4]
+    start_bbox = np.array([175, 128, 230, 180])
+    # start_bbox = init_bbox
+    print('start_bbox', start_bbox)
+    img = cv2.imread(paths[190])
+    # patch = drawing.drawRect(img, start_bbox, 1, (255,0,0))
+    # cv2.imwrite('test_results/track_result_%05d.png'%(0), patch)
+
+    image_size = (img.shape[1], img.shape[0])
+    video_writer = cv2.VideoWriter('project.avi',cv2.VideoWriter_fourcc(*'DIVX'), 10, image_size)
+
+    predicted_bbox = tracker.track(1, img, start_bbox)
+    print('predicted_bbox', predicted_bbox, 'ground', start_bbox)
+    for i in range(190, 600):
         img = cv2.imread(paths[i])
-        output = tracker.track(1,img, bbox=bbox)
-        print('output', output.astype('int32'))
-        patch = drawing.drawRect(img, output, 1, (255,0,0))
+        predicted_bbox = tracker.track(1,img)
+        print('predicted_bbox', predicted_bbox.astype('int32'), 'ground', x[i,:4])
+        patch = drawing.drawRect(img, predicted_bbox, 1, (255,0,0))
+        video_writer.write(patch)
         cv2.imwrite('test_results/track_result_%05d.png'%(i), patch)
-        bbox = None
-    
+    video_writer.release()
