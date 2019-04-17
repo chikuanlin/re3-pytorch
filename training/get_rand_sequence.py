@@ -51,6 +51,7 @@ class Dataset(object):
 		self.cur_line = 0  # current line # in labels.npy. i.e. from 0 to 280,000
 		self.USE_NETWORK_PROB = USE_NETWORK_PROB
 		self.device = device
+		simulator.make_paths()
 
 	def add_dataset(self, dataset_name, mode, folder):
 		dataset_ind = len(self.datasets)
