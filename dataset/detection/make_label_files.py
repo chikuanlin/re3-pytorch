@@ -61,10 +61,10 @@ def main(label_type):
         imOn = ii
         label = labels[imOn]
         labelTree = ET.parse(label)
-        try:
-            imgSize = get_image_size(images[imOn])
-        except:
-            continue
+        # try:
+        imgSize = get_image_size(images[imOn])
+        # except:
+        #     continue
         area_cutoff = imgSize[0] * imgSize[1] * 0.01
         if DEBUG:
             print('\nimage name\n\n%s\n' % images[imOn])
