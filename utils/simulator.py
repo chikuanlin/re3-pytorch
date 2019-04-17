@@ -8,12 +8,11 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(
 	os.path.dirname(__file__),
-	os.path.pardir,
 	os.path.pardir
 	)))
 
-from bb_util import *
-from IOU import *
+from utils.bb_util import *
+from utils.IOU import *
 import TrackedObject
 # from constants import CROP_SIZE
 # from constants import CROP_PAD
