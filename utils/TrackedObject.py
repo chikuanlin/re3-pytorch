@@ -10,7 +10,7 @@ import os
 #     os.path.pardir
 #     )))
 
-import IOU
+from utils import IOU
 
 VELOCITY_SCALAR = .5
 SIZE_VELOCITY_SCALAR = 40
