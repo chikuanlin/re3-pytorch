@@ -12,8 +12,8 @@ sys.path.append(os.path.abspath(os.path.join(
 	os.path.pardir
 	)))
 
-import bb_util
-import IOU
+from bb_util import *
+from IOU import *
 import TrackedObject
 # from constants import CROP_SIZE
 # from constants import CROP_PAD
