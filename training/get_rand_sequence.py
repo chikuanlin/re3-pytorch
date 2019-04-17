@@ -147,7 +147,7 @@ class Dataset(object):
 		tImage = np.zeros((self.delta, 2, CROP_SIZE, CROP_SIZE, 3), dtype=np.uint8)
 		xywhLabels = np.zeros((self.delta, 4), dtype=np.float32)
 
-		useSimulator = random.random() < USE_SIMULATOR*2
+		useSimulator = random.random() < USE_SIMULATOR
 		mirrored = random.random() < 0.5
 
 		# realMotion = random.random() < REAL_MOTION_PROB
