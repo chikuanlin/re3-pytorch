@@ -110,7 +110,7 @@ def subplot(plots, rows, cols, outputWidth, outputHeight, border=BORDER,
 # BBoxes are [x1 y1 x2 y2]
 def drawRect(image, bbox, padding, color):
     # from my_utils.util import bb_util
-    from re3_utils.util import bb_util
+    import bb_util
 
     imageHeight = image.shape[0]
     imageWidth = image.shape[1]
