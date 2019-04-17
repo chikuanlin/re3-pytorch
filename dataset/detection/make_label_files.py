@@ -31,7 +31,7 @@ def main(label_type):
     # dataset_path = '/media/yueshen/Sea_Gate!/imagenet/detection/ILSVRC2014_DET_train/'
 
     # dataset path on google
-    dataset_path = '/home/detection/ILSVRC'
+    dataset_path = '/home/detection/ILSVRC/'
 
 
     annotationPath = dataset_path + 'Annotations/'
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     label = np.load('./labels/train/labels.npy')
     print(label[:100, :])
     print('total len = ', label.shape[0])
-    
+
 
     # main('val')
 
