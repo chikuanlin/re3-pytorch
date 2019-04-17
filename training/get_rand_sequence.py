@@ -25,9 +25,16 @@ from constants import OUTPUT_WIDTH
 from constants import OUTPUT_HEIGHT
 from constants import LOG_DIR
 
+SIMULATION_WIDTH = simulator.IMAGE_WIDTH
+SIMULATION_HEIGHT = simulator.IMAGE_HEIGHT
+simulator.NUM_DISTRACTORS = 20
+
 REAL_MOTION_PROB = 1/8
 AREA_CUTOFF = 0.7
 USE_SIMULATOR = 0.5
+
+PARALLEL_SIZE = 4
+
 
 class Dataset(object):
 	# OUR IMPLEMENTATION
