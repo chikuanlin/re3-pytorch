@@ -8,12 +8,15 @@ import os.path
 import random
 import torch
 sys.path.append(os.path.abspath(os.path.join(
-    os.path.dirname(__file__), os.path.pardir)))
+	os.path.dirname(__file__), os.path.pardir)))
 
 from utils import im_util
 from utils import bb_util
 from utils import drawing
 from utils import IOU
+
+# simulator scripts
+from utils import simulator
 
 from constants import CROP_PAD
 from constants import CROP_SIZE
@@ -24,7 +27,7 @@ from constants import LOG_DIR
 
 REAL_MOTION_PROB = 1/8
 AREA_CUTOFF = 0.7
-
+USE_SIMULATOR = 0.5
 
 class Dataset(object):
 	# OUR IMPLEMENTATION
@@ -135,48 +138,89 @@ class Dataset(object):
 		tImage = np.zeros((self.delta, 2, CROP_SIZE, CROP_SIZE, 3), dtype=np.uint8)
 		xywhLabels = np.zeros((self.delta, 4), dtype=np.float32)
 
+		useSimulator = random.random() < USE_SIMULATOR*2
+		mirrored = random.random() < 0.5
+
 		# realMotion = random.random() < REAL_MOTION_PROB
 		gtType = random.random()
 
-		# need to incorporate four datasets....
-		GENERATE_RANDOM = True
-		while GENERATE_RANDOM:
-			try:
-				# randomly select a folder/dataset_id
-				self.dataset_id = np.random.random_integers(0, 3)
-				# randomly select the starting point/line in the entire labels.npy file 
-				self.cur_line = np.random.random_integers(0, self.len_labels[self.dataset_id]-1)
-				gtKey, images = self.get_data()  # return gtKey, images. len(images) = self.delta. gtKey points to the first line of the seq
-				GENERATE_RANDOM = False
-			except ValueError as err:
-				#print('Re-generating random number:', err)
-				pass
+		if useSimulator:
+			# Initialize the simulation and run through a few frames.
+			trackingObj, trackedObjects, background = simulator.create_new_track()
+			for _ in range(random.randint(0,200)):
+				simulator.step(trackedObjects)
+				bbox = trackingObj.get_object_box()
+				occlusion = simulator.measure_occlusion(bbox, trackingObj.occluder_boxes, cropPad=1)
+				if occlusion > .2:
+					break
+			for _ in range(1000):
+				bbox = trackingObj.get_object_box()
+				occlusion = simulator.measure_occlusion(bbox, trackingObj.occluder_boxes, cropPad=1)
+				if occlusion < 0.01:
+					break
+				simulator.step(trackedObjects)
+			initBox = trackingObj.get_object_box()
+			if self.debug:
+				images = [simulator.get_image_for_frame(trackedObjects, background)]
+			else:
+				images = [np.zeros((SIMULATION_HEIGHT, SIMULATION_WIDTH))]
+		else:
+			# need to incorporate four datasets....
+			GENERATE_RANDOM = True
+			while GENERATE_RANDOM:
+				try:
+					# randomly select a folder/dataset_id
+					self.dataset_id = np.random.random_integers(0, 3)
+					# randomly select the starting point/line in the entire labels.npy file 
+					self.cur_line = np.random.random_integers(0, self.len_labels[self.dataset_id]-1)
+					gtKey, images = self.get_data()  # return gtKey, images. len(images) = self.delta. gtKey points to the first line of the seq
+					GENERATE_RANDOM = False
+				except ValueError as err:
+					#print('Re-generating random number:', err)
+					pass
 
-		# print('gtkey = ', gtKey)
-		row = self.key_lookup[gtKey]  # 0 ~ 280,000, first row of the seq, in a dataset
+			# print('gtkey = ', gtKey)
+			row = self.key_lookup[gtKey]  # 0 ~ 280,000, first row of the seq, in a dataset
 
-		# Initialize the first frame
-		initBox = self.datasets[gtKey[0]][row, :4].copy()
+			# Initialize the first frame
+			initBox = self.datasets[gtKey[0]][row, :4].copy()
 
 		# bboxPrev starts at the initial box and is the best guess (or gt) for the image0 location.
 		bboxPrev = initBox
 		lstmState = None
 
 		for dd in range(self.delta):
-			newKey = list(gtKey)
-			newKey[3] += dd
-			newKey = tuple(newKey)
-			row = self.key_lookup[newKey]
-			
-			bboxOn = self.datasets[newKey[0]][row, :4].copy()
-			# print('row = ', bboxOn)
+			if useSimulator:
+				bboxOn = trackingObj.get_object_box()
+			else:
+				newKey = list(gtKey)
+				newKey[3] += dd
+				newKey = tuple(newKey)
+				row = self.key_lookup[newKey]
+				
+				bboxOn = self.datasets[newKey[0]][row, :4].copy()
+				# print('row = ', bboxOn)
 			if dd == 0:
-			    noisyBox = bboxOn.copy()
+				noisyBox = bboxOn.copy()
 			else:
 				noisyBox = self.fix_bbox_intersection(bboxPrev, bboxOn, images[0].shape[1], images[0].shape[0])
 
-			tImage[dd, 0, ...], outputBox = im_util.get_cropped_input(images[max(dd-1, 0)], bboxPrev, CROP_PAD, CROP_SIZE)
-			tImage[dd,1,...] = im_util.get_cropped_input(images[dd], noisyBox, CROP_PAD, CROP_SIZE)[0]
+			if useSimulator:
+				patch = simulator.render_patch(bboxPrev, background, trackedObjects)
+				tImage[dd,0,...] = patch
+				if dd > 0:
+					simulator.step(trackedObjects)
+					bboxOn = trackingObj.get_object_box()
+					noisyBox = self.fix_bbox_intersection(bboxPrev, bboxOn, images[0].shape[1], images[0].shape[0])
+
+			else:
+				tImage[dd, 0, ...], outputBox = im_util.get_cropped_input(images[max(dd-1, 0)], bboxPrev, CROP_PAD, CROP_SIZE)
+			
+			if useSimulator:
+				patch = simulator.render_patch(noisyBox, background, trackedObjects)
+				tImage[dd,1,...] = patch
+			else:
+				tImage[dd,1,...] = im_util.get_cropped_input(images[dd], noisyBox, CROP_PAD, CROP_SIZE)[0]
 
 			# shiftedBBox = bb_util.to_crop_coordinate_system(bboxOn, outputBox, CROP_PAD, 1)  # why CROP_PAD
 			shiftedBBox = bb_util.to_crop_coordinate_system(bboxOn, noisyBox, CROP_PAD, 1)
@@ -199,6 +243,9 @@ class Dataset(object):
 			else:
 				bboxPrev = bboxOn
 
+		if mirrored:
+			tImage = np.fliplr(tImage.transpose(2,3,4,0,1)).transpose(3,4,0,1,2)
+			xywhLabels[...,0] = 1 - xywhLabels[...,0]
 		# print('xywhLabels = ', xywhLabels)
 		tImage = tImage.reshape([self.delta * 2] + list(tImage.shape[2:]))
 		xyxyLabels = bb_util.xywh_to_xyxy(xywhLabels.T).T * 10
@@ -211,20 +258,22 @@ class Dataset(object):
 if __name__ == '__main__':
 	DEBUG = False
 
-	delta = 32
-	imagenet = Dataset(delta, mode='train', load_all=True)
+	delta = 2
+	# imagenet = Dataset(delta, mode='train', load_all=True)
+	imagenet = Dataset(net=None, device=None, delta=delta, mode='train', load_all=False, USE_NETWORK_PROB=0)
 	print('created dataset')
 
 	# print(dataset.key_lookup[(0,11,0,0)])
 	old = None
 	# read tImage
 	num_seq = 0 
-	NUM_SEQ = 10
+	NUM_SEQ = 1
 	Images = np.zeros((NUM_SEQ, delta*2, 3, CROP_SIZE, CROP_SIZE), dtype=np.uint8)
 	Labels = np.zeros((NUM_SEQ, delta, 4))
 	while num_seq < NUM_SEQ:
 		tImage, xyxyLabels = imagenet.get_data_sequence()
-		print('video_idx', imagenet.video_idx, 'track_idx', imagenet.track_idx)
+		# print('video_idx', imagenet.video_idx, 'track_idx', imagenet.track_idx)
+
 
 		if DEBUG:
 			if num_seq == 0:
