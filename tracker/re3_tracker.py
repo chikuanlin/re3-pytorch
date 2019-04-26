@@ -17,7 +17,7 @@ import utils.drawing as drawing
 from constants import CROP_PAD
 from constants import CROP_SIZE
 
-MAX_TRACK_LENGTH = 16
+MAX_TRACK_LENGTH = 4
 
 class Re3Tracker(object):
     def __init__(self, model_path = 'checkpoint.pth'):
@@ -48,7 +48,6 @@ class Re3Tracker(object):
         cropped_input1, _ = im_util.get_cropped_input(image, past_bbox, CROP_PAD, CROP_SIZE)
 
         network_input = np.stack((cropped_input0.transpose(2,0,1),cropped_input1.transpose(2,0,1)))
-        # network_input = network_input.reshape((2,3,CROP_SIZE, CROP_SIZE))
         network_input = torch.tensor(network_input, dtype = torch.float)    
         
         with torch.no_grad():
@@ -56,11 +55,8 @@ class Re3Tracker(object):
             network_predicted_bbox, lstm_state = self.net(network_input, prevLstmState = lstm_state)
 
         if forward_count == 0:
-            state1_h = lstm_state[0][0].clone()
-            state1_c = lstm_state[0][1].clone()
-            state2_h = lstm_state[1][0].clone()
-            state2_c = lstm_state[1][1].clone()
-            initial_state = ((state1_h, state1_c), (state2_h, state2_c))
+            initial_state = lstm_state
+            # initial_state = None
             
         prev_image = image
 
@@ -69,7 +65,6 @@ class Re3Tracker(object):
         # Reset state
         if forward_count > 0 and forward_count % MAX_TRACK_LENGTH == 0:
             lstm_state = initial_state
-            # lstm_state = None
 
         forward_count += 1
 
@@ -77,14 +72,14 @@ class Re3Tracker(object):
             predicted_bbox = bbox
 
         predicted_bbox = predicted_bbox.reshape(4)
-        if predicted_bbox[0] < 0:
-            predicted_bbox[0] = 0
-        if predicted_bbox[1] < 0:
-            predicted_bbox[1] = 0
-        if predicted_bbox[2] > image.shape[1]:
-            predicted_bbox[2] = image.shape[1]-1
-        if predicted_bbox[3] > image.shape[0]:
-            predicted_bbox[3] = image.shape[0]-1 
+        # if predicted_bbox[0] < 0:
+        #     predicted_bbox[0] = 0
+        # if predicted_bbox[1] < 0:
+        #     predicted_bbox[1] = 0
+        # if predicted_bbox[2] > image.shape[1]:
+        #     predicted_bbox[2] = image.shape[1]-1
+        # if predicted_bbox[3] > image.shape[0]:
+        #     predicted_bbox[3] = image.shape[0]-1 
 
         self.tracked_data[id] = (lstm_state, initial_state, predicted_bbox, prev_image, forward_count)
         
@@ -100,27 +95,30 @@ if __name__ == "__main__":
     args = parser.parse_args()
     PATH = args.path
     # init_bbox = np.array([int(i) for i in args.init_bbox.split()], dtype = float)
-    # PATH = 'ILSVRC/ILSVRC2015_train_00034002/'
-    PATH = 'VOT/'
+    # PATH = 'ILSVRC/ILSVRC2015_train_00000000/'
+    PATH = 'VOT2/'
+    # PATH = 'ILSVRC/ILSVRC2015_test_00004002/'
     paths = [PATH + f for f in os.listdir(PATH)]
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     tracker = Re3Tracker('checkpoint.pth')
 
     x = np.load('labels.npy')
     # start_bbox = x[0,:4]
-    start_bbox = np.array([175, 128, 230, 180])
+    # start_bbox = np.array([200, 110, 245, 160])
+    start_bbox = np.array([3, 165, 50, 195])
+    # start_bbox = np.array([315, 225, 520, 490])
     # start_bbox = init_bbox
     print('start_bbox', start_bbox)
-    img = cv2.imread(paths[190])
+    img = cv2.imread(paths[0])
     # patch = drawing.drawRect(img, start_bbox, 1, (255,0,0))
     # cv2.imwrite('test_results/track_result_%05d.png'%(0), patch)
 
     image_size = (img.shape[1], img.shape[0])
-    video_writer = cv2.VideoWriter('project.avi',cv2.VideoWriter_fourcc(*'DIVX'), 10, image_size)
+    video_writer = cv2.VideoWriter('project.avi',cv2.VideoWriter_fourcc(*'DIVX'), 30, image_size)
 
     predicted_bbox = tracker.track(1, img, start_bbox)
     print('predicted_bbox', predicted_bbox, 'ground', start_bbox)
-    for i in range(190, 600):
+    for i in range(1,250):
         img = cv2.imread(paths[i])
         predicted_bbox = tracker.track(1,img)
         print('predicted_bbox', predicted_bbox.astype('int32'), 'ground', x[i,:4])
