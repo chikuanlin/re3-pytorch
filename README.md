@@ -26,4 +26,10 @@ Test the network with webcam
 python3 webcam_demo.py
 ```
 
+Generate a video from a folder of image sequence
+```
+python3 tracker/re3_tracker.py -p "FOLDER_PATH" -b "X_MIN YMIN X_MAX Y_MAX"
+```
+
+
 ## Files
