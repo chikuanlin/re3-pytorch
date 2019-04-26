@@ -72,14 +72,6 @@ class Re3Tracker(object):
             predicted_bbox = bbox
 
         predicted_bbox = predicted_bbox.reshape(4)
-        # if predicted_bbox[0] < 0:
-        #     predicted_bbox[0] = 0
-        # if predicted_bbox[1] < 0:
-        #     predicted_bbox[1] = 0
-        # if predicted_bbox[2] > image.shape[1]:
-        #     predicted_bbox[2] = image.shape[1]-1
-        # if predicted_bbox[3] > image.shape[0]:
-        #     predicted_bbox[3] = image.shape[0]-1 
 
         self.tracked_data[id] = (lstm_state, initial_state, predicted_bbox, prev_image, forward_count)
         
@@ -94,35 +86,21 @@ if __name__ == "__main__":
     parser.add_argument('-b', '--init_bbox', action='store', type=str, help = "In string format: \"xmin ymin xmax ymax\" ")
     args = parser.parse_args()
     PATH = args.path
-    # init_bbox = np.array([int(i) for i in args.init_bbox.split()], dtype = float)
-    # PATH = 'ILSVRC/ILSVRC2015_train_00000000/'
-    PATH = 'VOT2/'
-    # PATH = 'ILSVRC/ILSVRC2015_test_00004002/'
+    
+    start_bbox = np.array([float(i) for i in args.init_bbox.split()])
+    
     paths = [PATH + f for f in os.listdir(PATH)]
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    tracker = Re3Tracker('checkpoint.pth')
-
-    x = np.load('labels.npy')
-    # start_bbox = x[0,:4]
-    # start_bbox = np.array([200, 110, 245, 160])
-    start_bbox = np.array([3, 165, 50, 195])
-    # start_bbox = np.array([315, 225, 520, 490])
-    # start_bbox = init_bbox
-    print('start_bbox', start_bbox)
+    tracker = Re3Tracker()
     img = cv2.imread(paths[0])
-    # patch = drawing.drawRect(img, start_bbox, 1, (255,0,0))
-    # cv2.imwrite('test_results/track_result_%05d.png'%(0), patch)
 
     image_size = (img.shape[1], img.shape[0])
-    video_writer = cv2.VideoWriter('project.avi',cv2.VideoWriter_fourcc(*'DIVX'), 30, image_size)
+    video_writer = cv2.VideoWriter('result.avi',cv2.VideoWriter_fourcc(*'DIVX'), 30, image_size)
 
     predicted_bbox = tracker.track(1, img, start_bbox)
-    print('predicted_bbox', predicted_bbox, 'ground', start_bbox)
-    for i in range(1,250):
+    for i in range(1,len(paths)):
         img = cv2.imread(paths[i])
         predicted_bbox = tracker.track(1,img)
-        print('predicted_bbox', predicted_bbox.astype('int32'), 'ground', x[i,:4])
         patch = drawing.drawRect(img, predicted_bbox, 1, (255,0,0))
         video_writer.write(patch)
-        cv2.imwrite('test_results/track_result_%05d.png'%(i), patch)
     video_writer.release()
