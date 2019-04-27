@@ -16,6 +16,19 @@ Download the repository
 git clone https://github.com/chikuanlin/re3-pytorch.git
 ```
 
+Generate labels (GT) of ImageNet video dataset
+```
+cd dataset/
+python3 make_label_files.py
+```
+
+Generate labels (GT) of ImageNet object detection dataset
+```
+cd dataset/detection/
+python3 make_label_files.py
+```
+
+
 Train the network
 ```
 python3 training/training.py -m 10000 -n 2 -u 0 -b 64 -l 1e-5
