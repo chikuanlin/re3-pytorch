@@ -7,6 +7,7 @@ Please refer to https://arxiv.org/pdf/1705.06368.pdf for implementation details 
 * Pytorch
 * Numpy
 * OpenCV
+* CUDA
 
 ## Setup
 
