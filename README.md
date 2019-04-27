@@ -1,6 +1,6 @@
 # Re-implementation of Re3 in Pytorch
-This is a repository for Winter 2019 EECS 442 Computer Vision Final Project at the University of Michigan. It is an reimplementation based on the [code](https://gitlab.com/danielgordon10/re3-tensorflow) authored by [Daniel Gorden](https://homes.cs.washington.edu/~xkcd/) and his [paper](https://arxiv.org/pdf/1705.06368.pdf).
-Please refer to https://arxiv.org/pdf/1705.06368.pdf for implementation details and https://gitlab.com/danielgordon10/re3-tensorflow for the original code source.
+* This is a repository for Winter 2019 EECS 442 Computer Vision Final Project at the University of Michigan. It is an reimplementation based on the [code](https://gitlab.com/danielgordon10/re3-tensorflow) authored by [Daniel Gorden](https://homes.cs.washington.edu/~xkcd/) and his [paper](https://arxiv.org/pdf/1705.06368.pdf).
+* Please refer to https://arxiv.org/pdf/1705.06368.pdf for implementation details and https://gitlab.com/danielgordon10/re3-tensorflow for the original source code.
 
 ## Requirements
 * Python3 or above
@@ -28,7 +28,6 @@ Generate labels (GT) of ImageNet object detection dataset
 cd dataset/detection/
 python3 make_label_files.py
 ```
-
 
 Train the network
 ```
