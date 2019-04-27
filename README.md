@@ -35,14 +35,16 @@ python3 tracker/re3_tracker.py -p "FOLDER_PATH" -b "X_MIN YMIN X_MAX Y_MAX"
 
 ## Main Files
 * datasets/
-  * a
-  * b
+  * [make_label_files.py](dataset/make_label_files.py) - The label (GT) generating script for ImageNet Video dataset. The output .npy label file and text image name file are saved in labels/. 
+  * [detection/make_label_files.py](dataset/make_label_files.py) - The label (GT) generating script for ImageNet Object Detection dataset. The output .npy label file and text image name file are saved in detection/labels/.
 * tracker/
-  * network.py - A Re3 class implementation in Pytorch
-  * re3_tracker.py - A multi-object tracker class
+  * [network.py](tracker/network.py) - A Re3 class implementation in Pytorch
+  * [re3_tracker.py](tracker/network.py) - A multi-object tracker class
+  * [re3_vot_tracker.py](tracker/re3_vot_tracker.py) - ...
 * training/
-  * training.py - Main script for training the network
-  * get_rand_sequence - generate a batch of sequence randomly, called by training
+  * [training.py](training/training.py) - Main script for training the network
+  * [get_rand_sequence.py](training/get_rand_sequence.py) - generate a batch of sequence randomly, called by [training.py](training/training.py)
+  * [get_datasets.py] - helper function called by [get_rand_sequence.py](training/get_rand_sequence.py)
 * utils/
   * Please refer to the [original code source](https://gitlab.com/danielgordon10/re3-tensorflow) for detailed information
   
