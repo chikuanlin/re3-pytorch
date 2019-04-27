@@ -23,10 +23,10 @@ if __name__ == "__main__":
     VIDEO_PATH.sort()
 
     scores = []
-
+    tracker = Re3Tracker()
     for video in VIDEO_PATH:
+        tracker.reset()
         
-        tracker = Re3Tracker()
         print('Now in folder: ' + video)
         image_path = [video + 'color/' + f for f in os.listdir(video + 'color/')]
         image_path.sort()
