@@ -40,7 +40,7 @@ python3 training/training.py -m 10000 -n 2 -u 0 -b 64 -l 1e-5
 
 Test the network with webcam and save the result with -r (Modified from the original source code)
 ```
-python3 webcam_demo.py -r
+python3 tracker/webcam_demo.py -r
 ```
 
 Generate a video from a folder of image sequence
@@ -48,21 +48,26 @@ Generate a video from a folder of image sequence
 python3 tracker/re3_tracker.py -p "FOLDER_PATH" -b "X_MIN YMIN X_MAX Y_MAX"
 ```
 
+Run VOT test dataset and output IOU scores (Need to modify the path in the script)
+```
+python3 tracker/vot_test_tracker.py
+```
 
 ## Main Files
-Helper functions and scripts that are modified or obtained from the original source code would be labeled with a (M)
+Helper functions and scripts that are modified or obtained from the original source code would be labeled with a *
 * datasets/
-  * [make_label_files.py (M)](dataset/make_label_files.py) - The label (GT) generating script for ImageNet Video dataset. The output .npy label file and text image name file are saved in labels/. 
-  * [detection/make_label_files.py (M)](dataset/detection/make_label_files.py) - The label (GT) generating script for ImageNet Object Detection dataset. The output .npy label file and text image name file are saved in detection/labels/.
+  * [make_label_files.py*](dataset/make_label_files.py) - The label (GT) generating script for ImageNet Video dataset. The output .npy label file and text image name file are saved in labels/. 
+  * [detection/make_label_files.py*](dataset/detection/make_label_files.py) - The label (GT) generating script for ImageNet Object Detection dataset. The output .npy label file and text image name file are saved in detection/labels/.
 * tracker/
   * [network.py](tracker/network.py) - A Re3 class implementation in Pytorch
-  * [re3_tracker.py (M)](tracker/network.py) - A multi-object tracker class
+  * [re3_tracker.py*](tracker/network.py) - A multi-object tracker class
   * [vot_test_tracker.py](tracker/vot_test_tracker.py) - A script that generates the IOU score from given VOT dataset
+  * [webcam_demo.py*](tracker/webcam_demo.py) - A webcam demo (multi-object tracking)
 * training/
   * [training.py](training/training.py) - Main script for training the network
-  * [get_rand_sequence.py (M)](training/get_rand_sequence.py) - generate a batch of sequence randomly, called by [training.py](training/training.py) 
-  * [get_datasets.py (M)](training/get_datasets.py) - helper function called by [get_rand_sequence.py](training/get_rand_sequence.py)
-* utils/ (M)
+  * [get_rand_sequence.py*](training/get_rand_sequence.py) - generate a batch of sequence randomly, called by [training.py](training/training.py) 
+  * [get_datasets.py*](training/get_datasets.py) - helper function called by [get_rand_sequence.py](training/get_rand_sequence.py)
+* utils/*
   * Please refer to the original source code for detailed information
   
 ## Project Collaborators
