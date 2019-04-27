@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-  File "/home/re3-pytorch/tracker/re3_vot_tracker.py", line 2, in <module>
-    import vot
-ImportError: No module named 'vot'

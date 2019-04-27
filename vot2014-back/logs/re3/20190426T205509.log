@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-  File "/home/re3-pytorch/tracker/re3_vot_tracker.py", line 1, in <module>
-    import re3_tracker
-  File "/home/re3-pytorch/tracker/re3_tracker.py", line 1, in <module>
-    import cv2
-ImportError: No module named cv2
