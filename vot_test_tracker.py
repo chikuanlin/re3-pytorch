@@ -5,7 +5,7 @@ import utils.IOU as IOU
 import utils.drawing as drawing
 import cv2
 
-SEQ_PATH = 'vot2014/sequences/'
+SEQ_PATH = 'vot2014-back/sequences/'
 
 def to_xyxy(input):
     x_coord = input[[0,2,4,6]]
