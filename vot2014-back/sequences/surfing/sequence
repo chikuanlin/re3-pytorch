@@ -1,0 +1,4 @@
+name=surfing
+fps=30
+format=default
+channels.color=color/%08d.jpg

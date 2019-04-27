@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "/home/re3-pytorch/tracker/vot.py", line 18, in <module>
+    import trax
+  File "/home/re3-pytorch/tracker/trax.py", line 7, in <module>
+    __bootstrap__()
+  File "/home/re3-pytorch/tracker/trax.py", line 6, in __bootstrap__
+    imp.load_dynamic(__name__,__file__)
+  File "/usr/lib/python3.5/imp.py", line 342, in load_dynamic
+    return _load(spec)
+ImportError: dynamic module does not define module export function (PyInit_trax)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/re3-pytorch/tracker/re3_vot_tracker.py", line 2, in <module>
+    import vot
+  File "/home/re3-pytorch/tracker/vot.py", line 20, in <module>
+    raise Exception('TraX support not found. Please add trax module to Python path.')
+Exception: TraX support not found. Please add trax module to Python path.

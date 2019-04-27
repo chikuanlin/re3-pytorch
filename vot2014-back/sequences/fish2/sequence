@@ -1,0 +1,4 @@
+name=fish2
+fps=30
+format=default
+channels.color=color/%08d.jpg
