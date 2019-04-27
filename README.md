@@ -38,7 +38,7 @@ Example:
 python3 training/training.py -m 10000 -n 2 -u 0 -b 64 -l 1e-5
 ```
 
-Test the network with webcam and save the result with -r (Modified from the original source code)
+Test the network with webcam and save the result with -r
 ```
 python3 tracker/webcam_demo.py -r
 ```
@@ -54,7 +54,7 @@ python3 tracker/vot_test_tracker.py
 ```
 
 ## Main Files
-Helper functions and scripts that are modified or obtained from the original source code would be labeled with a *
+Helper functions and scripts that are modified or obtained from the original source code would be labeled with *
 * datasets/
   * [make_label_files.py*](dataset/make_label_files.py) - The label (GT) generating script for ImageNet Video dataset. The output .npy label file and text image name file are saved in labels/. 
   * [detection/make_label_files.py*](dataset/detection/make_label_files.py) - The label (GT) generating script for ImageNet Object Detection dataset. The output .npy label file and text image name file are saved in detection/labels/.
@@ -62,7 +62,7 @@ Helper functions and scripts that are modified or obtained from the original sou
   * [network.py](tracker/network.py) - A Re3 class implementation in Pytorch
   * [re3_tracker.py*](tracker/network.py) - A multi-object tracker class
   * [vot_test_tracker.py](tracker/vot_test_tracker.py) - A script that generates the IOU score from given VOT dataset
-  * [webcam_demo.py*](tracker/webcam_demo.py) - A webcam demo (multi-object tracking)
+  * [webcam_demo.py*](tracker/webcam_demo.py) - A webcam demo script (multi-object tracking)
 * training/
   * [training.py](training/training.py) - Main script for training the network
   * [get_rand_sequence.py*](training/get_rand_sequence.py) - generate a batch of sequence randomly, called by [training.py](training/training.py) 
