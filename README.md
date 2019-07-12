@@ -16,6 +16,9 @@ Download the repository
 git clone https://github.com/chikuanlin/re3-pytorch.git
 cd re3-pytorch
 ```
+Download pre-trained model from the following link and unzip it into the repository
+[https://drive.google.com/file/d/17vr3iazbcnSS_ZndbgAAz1mCxg9lJy5f/view?usp=sharing](https://drive.google.com/file/d/17vr3iazbcnSS_ZndbgAAz1mCxg9lJy5f/view?usp=sharing)
+
 
 Generate labels (GT) of ImageNet video dataset
 ```
